@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
+using MassTransit;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,7 +34,15 @@ namespace Basket.API
                 option.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString");
             });
 
+            services.AddMassTransit(config=> {
+                config.UsingRabbitMq((ctx, cfg) => {
+                    cfg.Host(Configuration["EventBusSettings:HostAddress"]);
+                });
+            });
+            services.AddMassTransitHostedService();
+
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
